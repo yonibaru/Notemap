@@ -3,9 +3,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
 import React, { useEffect, useRef, useState } from "react";
 import {
-    Text,
-    TouchableOpacity,
-    View
+  Text,
+  TouchableOpacity,
+  View
 } from "react-native";
 import MapView, { Region } from "react-native-maps";
 import Toast from "react-native-toast-message";
@@ -22,9 +22,11 @@ interface Note {
   title: string;
   description: string;
   date?: string;
+  imageUri?: string;
 }
 
 const NOTES_STORAGE_KEY = '@notemap_notes';
+const TEST_NOTES_GENERATED_KEY = '@notemap_test_notes_generated';
 
 export default function MainScreen() {
   const { user, logout } = useAuth();
@@ -77,18 +79,10 @@ export default function MainScreen() {
     }
   };
 
-  // Generate test notes around current location
-  const generateTestNotes = async () => {
-    try {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        Toast.show({
-          type: "error",
-          text2: "Please enable location permissions to generate test notes",
-        });
-        return;
-      }
 
+  // Generate test notes on first app launch (location already obtained)
+  const generateTestNotesFirstTime = async () => {
+    try {
       const currentLocationData = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
       });
@@ -112,7 +106,7 @@ export default function MainScreen() {
         longitude: currentLocationData.coords.longitude + noteData.offset.lng,
         title: noteData.title,
         description: noteData.description,
-        date: new Date().toISOString(),
+        date: new Date().toLocaleDateString('en-GB'),
       }));
 
       const updatedNotes = [...notes, ...newTestNotes];
@@ -121,15 +115,11 @@ export default function MainScreen() {
 
       Toast.show({
         type: "success",
-        text2: `Generated ${newTestNotes.length} test notes around your location`,
+        text2: `Welcome! Generated ${newTestNotes.length} sample notes around your location`,
       });
 
     } catch (error) {
-      console.log("Error generating test notes:", error);
-      Toast.show({
-        type: "error",
-        text2: "Unable to generate test notes",
-      });
+      console.log("Error generating initial test notes:", error);
     }
   };
 
@@ -166,6 +156,15 @@ export default function MainScreen() {
           latitudeDelta: 0.0922,
           longitudeDelta: 0.0421,
         });
+
+        // Check if test notes have been generated before
+        const testNotesGenerated = await AsyncStorage.getItem(TEST_NOTES_GENERATED_KEY);
+        if (!testNotesGenerated) {
+          // Generate test notes on first launch
+          await generateTestNotesFirstTime();
+          // Mark that test notes have been generated
+          await AsyncStorage.setItem(TEST_NOTES_GENERATED_KEY, 'true');
+        }
       } catch (error) {
         console.log("Error getting location:", error);
       }
@@ -339,7 +338,6 @@ export default function MainScreen() {
           onMarkerPress={handleMarkerPress}
           onAddNoteAtCurrentLocation={addNoteAtCurrentLocation}
           onCenterOnUser={centerOnUser}
-          generateTestNotes={generateTestNotes}
         />
       )}
 

@@ -24,7 +24,6 @@ interface MapViewComponentProps {
   onMarkerPress: (note: Note) => void;
   onAddNoteAtCurrentLocation: () => void;
   onCenterOnUser: () => void;
-  generateTestNotes: () => void; // Function to generate test notes
 }
 
 export default function MapViewComponent({
@@ -35,7 +34,6 @@ export default function MapViewComponent({
   onMarkerPress,
   onAddNoteAtCurrentLocation,
   onCenterOnUser,
-  generateTestNotes,
 }: MapViewComponentProps) {
   const { logout } = useAuth();
 

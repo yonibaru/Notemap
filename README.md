@@ -1,50 +1,111 @@
-# Welcome to your Expo app 👋
+# Notemap 📍
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A location-based note-taking app built with React Native and Expo. Create, view, and manage notes anchored to specific geographic locations with image attachments.
 
-## Get started
+## Features
 
-1. Install dependencies
+- **Location-based Notes**: Create and view notes tied to geographic coordinates
+- **Interactive Map**: Navigate notes using an integrated map interface
+- **Image Attachments**: Attach photos from device gallery to notes
+- **Dual View Modes**: Switch between map view and list view
+- **User Authentication**: Secure login/signup with Firebase Auth
+- **Auto-generated Test Data**: Sample notes created on first launch
+- **Persistent Storage**: Local data persistence with AsyncStorage
+- **Responsive UI**: Modern interface with animations and toast notifications
 
+## Tech Stack
+
+- **Framework**: React Native with Expo SDK 53
+- **Navigation**: Expo Router with file-based routing
+- **Styling**: NativeWind (TailwindCSS for React Native)
+- **Maps**: React Native Maps
+- **Authentication**: Firebase Auth with AsyncStorage persistence
+- **Storage**: AsyncStorage for local data persistence
+- **Images**: Expo Image Picker for photo selection
+- **Location**: Expo Location for GPS functionality
+- **UI Components**: Custom components with Expo Vector Icons
+- **Animations**: React Native Animated API
+- **Toast Notifications**: React Native Toast Message
+
+## Setup & Installation
+
+1. **Install dependencies**
    ```bash
    npm install
    ```
 
-2. Start the app
+2. **Configure Firebase**
+   - Update `config/firebase.ts` with your Firebase project credentials
+   - Enable Authentication in Firebase Console
 
+3. **Start the development server**
    ```bash
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+4. **Run on device/simulator**
+   - iOS: `npx expo start --ios`
+   - Android: `npx expo start --android`
+   - Web: `npx expo start --web`
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Development Practices
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- **TypeScript**: Fully typed codebase with strict type checking
+- **Component Architecture**: Modular, reusable components with clear interfaces
+- **Context Pattern**: Centralized authentication state management
+- **Error Handling**: Comprehensive error handling with user feedback
+- **Performance**: Optimized with React.memo and efficient state management
+- **Code Quality**: ESLint configuration with Expo standards
+- **File Organization**: Feature-based folder structure with clear separation of concerns
 
-## Get a fresh project
+## Project Structure
 
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+app/                 # Main application screens (file-based routing)
+  (auth)/           # Authentication screens
+  _layout.tsx       # Root layout with auth protection
+  index.tsx         # Entry point
+  main.tsx          # Main app screen
+components/         # Reusable UI components
+  MapViewComponent.tsx
+  NoteEditor.tsx
+  NoteViewComponent.tsx
+  CustomMarker.tsx
+config/             # Configuration files
+  firebase.ts       # Firebase setup
+  toastConfig.tsx   # Toast notification config
+contexts/           # React Context providers
+  AuthContext.tsx   # Authentication state management
+types/              # TypeScript type definitions
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Key Features Implementation
 
-## Learn more
+- **Authentication Flow**: Protected routes with automatic redirect
+- **Real-time Location**: GPS tracking with permission handling
+- **Image Management**: Photo selection, display, and deletion
+- **Data Persistence**: Automatic save/load with AsyncStorage
+- **Toast Feedback**: User-friendly notifications for all actions
+- **Responsive Design**: Adaptive layouts for different screen sizes
 
-To learn more about developing your project with Expo, look at the following resources:
+## Current Status & Known Issues
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### Testing Coverage
+- ✅ Tested on iPhone 16 for responsiveness
+- ❌ Not tested on Android emulator
+- ❌ Not tested on real devices (other than development)
+- ❌ Non-responsive design for all device sizes
 
-## Join the community
+### Known Bugs
+- **Overlapping Notes**: Notes placed at similar locations hide each other on the map
+- **Map Animation Issues**: Continuous animation over edited markers causes flickering bugs with react-native-maps
 
-Join our community of developers creating universal apps.
+### Planned Features
+- **Backend Integration**: Store notes on database (backend on AWS)
+- **Note Clustering**: Show stack of notes when multiple notes are placed at same location
+- **Social Authentication**: Login via Google/Facebook/Apple
+- **Camera Integration**: Add ability to attach images directly from camera (currently gallery only)
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+### Performance Considerations
+- **Map Optimization**: Potential performance issues with too many notes on screen - optimization probably required
+- **Device Testing**: Need comprehensive testing across Android devices and various screen sizes
