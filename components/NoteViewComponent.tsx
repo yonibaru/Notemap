@@ -2,15 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from 'expo-linear-gradient';
 import React from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
-
-interface Note {
-  id: string;
-  latitude: number;
-  longitude: number;
-  title: string;
-  description: string;
-  date?: string;
-}
+import { Note } from "../services/notesService";
 
 interface NoteViewComponentProps {
   notes: Note[];

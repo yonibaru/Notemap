@@ -3,18 +3,10 @@ import React, { RefObject } from "react";
 import { Alert, Dimensions, Text, TouchableOpacity, View } from "react-native";
 import MapView, { Marker, Region } from "react-native-maps";
 import { useAuth } from "../contexts/AuthContext";
+import { Note } from "../services/notesService";
 import CustomMarker from "./CustomMarker"; // Ensure this import is correct
 
 const { width, height } = Dimensions.get("window");
-
-interface Note {
-  id: string;
-  latitude: number;
-  longitude: number;
-  title: string;
-  description: string;
-  date?: string;
-}
 
 interface MapViewComponentProps {
   mapRef: RefObject<MapView | null>;
@@ -91,13 +83,6 @@ export default function MapViewComponent({
           <Ionicons name="log-out-outline" size={20} color="white" />
         </TouchableOpacity>
 
-        {/* Test Notes Button :: DEV-MODE ONLY! */}
-        {/* <TouchableOpacity
-          className="bg-yellow-600/90 rounded-full p-3 shadow-lg border border-white/50 mt-5"
-          onPress={generateTestNotes}
-        >
-          <Text className="text-red-600 text-xs">DEV</Text>
-        </TouchableOpacity> */}
       </View>
 
       {/* Floating Action Buttons */}

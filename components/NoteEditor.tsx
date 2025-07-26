@@ -11,18 +11,9 @@ import {
   View,
 } from "react-native";
 import Toast from "react-native-toast-message";
+import { Note } from "../services/notesService";
 
 const { width, height } = Dimensions.get("window");
-
-interface Note {
-  id: string;
-  latitude: number;
-  longitude: number;
-  title: string;
-  description: string;
-  date?: string;
-  imageUri?: string;
-}
 
 interface NoteEditorProps {
   visible: boolean;
@@ -126,10 +117,6 @@ export default function NoteEditor({
       if (!result.canceled && result.assets[0]) {
         setSelectedImageUri(result.assets[0].uri);
         setShowImagePreview(true);
-        Toast.show({
-          type: "success",
-          text2: "Image attached successfully",
-        });
       }
     } catch (error) {
       console.error('Error picking image:', error);

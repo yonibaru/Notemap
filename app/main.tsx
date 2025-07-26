@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -14,19 +13,7 @@ import NoteEditor from "../components/NoteEditor";
 import NoteViewComponent from "../components/NoteViewComponent";
 import { toastConfig } from "../config/toastConfig";
 import { useAuth } from "../contexts/AuthContext";
-
-interface Note {
-  id: string;
-  latitude: number;
-  longitude: number;
-  title: string;
-  description: string;
-  date?: string;
-  imageUri?: string;
-}
-
-const NOTES_STORAGE_KEY = '@notemap_notes';
-const TEST_NOTES_GENERATED_KEY = '@notemap_test_notes_generated';
+import { Note, NotesService } from "../services/notesService";
 
 export default function MainScreen() {
   const { user, logout } = useAuth();
@@ -49,77 +36,17 @@ export default function MainScreen() {
     longitudeDelta: 0.0421,
   });
 
-  // Load notes from AsyncStorage
+  // Load notes using NotesService
   const loadNotes = async () => {
     try {
-      const storedNotes = await AsyncStorage.getItem(NOTES_STORAGE_KEY);
-      if (storedNotes) {
-        const parsedNotes = JSON.parse(storedNotes);
-        setNotes(parsedNotes);
-      }
+      const notes = await NotesService.loadNotes();
+      setNotes(notes);
     } catch (error) {
       console.error('Error loading notes:', error);
       Toast.show({
         type: "error",
         text2: "Failed to load saved notes",
       });
-    }
-  };
-
-  // Save notes to AsyncStorage
-  const saveNotes = async (notesToSave: Note[]) => {
-    try {
-      await AsyncStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(notesToSave));
-    } catch (error) {
-      console.error('Error saving notes:', error);
-      Toast.show({
-        type: "error",
-        text2: "Failed to save notes",
-      });
-    }
-  };
-
-
-  // Generate test notes on first app launch (location already obtained)
-  const generateTestNotesFirstTime = async () => {
-    try {
-      const currentLocationData = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High,
-      });
-
-      const testNotesData = [
-        { title: "Coffee Shop", description: "Great coffee and wifi for working", offset: { lat: 0.001, lng: 0.001 } },
-        { title: "Park Bench", description: "Nice spot for reading and relaxation", offset: { lat: -0.002, lng: 0.003 } },
-        { title: "Restaurant", description: "Amazing pasta and friendly service", offset: { lat: 0.003, lng: -0.001 } },
-        { title: "Grocery Store", description: "Don't forget to buy milk and bread", offset: { lat: -0.001, lng: -0.002 } },
-        { title: "Gym", description: "Workout schedule: Mon, Wed, Fri", offset: { lat: 0.002, lng: 0.002 } },
-        { title: "Library", description: "Quiet study area on second floor", offset: { lat: -0.003, lng: 0.001 } },
-        { title: "Bus Stop", description: "Route 42 stops here every 15 minutes", offset: { lat: 0.001, lng: -0.003 } },
-        { title: "Pharmacy", description: "Pick up prescription on Tuesday", offset: { lat: -0.002, lng: -0.001 } },
-        { title: "ATM", description: "24/7 access, no fees for my bank", offset: { lat: 0.003, lng: 0.003 } },
-        { title: "Meetup Spot", description: "Weekly book club meets here Thursday 7pm", offset: { lat: -0.001, lng: 0.002 } }
-      ];
-
-      const newTestNotes: Note[] = testNotesData.map((noteData, index) => ({
-        id: `test-${Date.now()}-${index}`,
-        latitude: currentLocationData.coords.latitude + noteData.offset.lat,
-        longitude: currentLocationData.coords.longitude + noteData.offset.lng,
-        title: noteData.title,
-        description: noteData.description,
-        date: new Date().toLocaleDateString('en-GB'),
-      }));
-
-      const updatedNotes = [...notes, ...newTestNotes];
-      setNotes(updatedNotes);
-      saveNotes(updatedNotes);
-
-      Toast.show({
-        type: "success",
-        text2: `Welcome! Generated ${newTestNotes.length} sample notes around your location`,
-      });
-
-    } catch (error) {
-      console.log("Error generating initial test notes:", error);
     }
   };
 
@@ -157,13 +84,13 @@ export default function MainScreen() {
           longitudeDelta: 0.0421,
         });
 
-        // Check if test notes have been generated before
-        const testNotesGenerated = await AsyncStorage.getItem(TEST_NOTES_GENERATED_KEY);
+        // Check if test notes have been generated before using NotesService
+        const testNotesGenerated = await NotesService.hasGeneratedTestNotes();
         if (!testNotesGenerated) {
           // Generate test notes on first launch
-          await generateTestNotesFirstTime();
-          // Mark that test notes have been generated
-          await AsyncStorage.setItem(TEST_NOTES_GENERATED_KEY, 'true');
+          await NotesService.generateTestNotes(location.coords.latitude, location.coords.longitude);
+          // Reload notes to include the new test notes
+          loadNotes();
         }
       } catch (error) {
         console.log("Error getting location:", error);
@@ -280,43 +207,51 @@ export default function MainScreen() {
     }, 100);
   };
 
-  const handleNoteSave = (noteData: Note) => {
-    let updatedNotes: Note[];
-    
-    if (editingNote) {
-      // Update existing note
-      updatedNotes = notes.map(n => n.id === noteData.id ? noteData : n);
-      setNotes(updatedNotes);
+  const handleNoteSave = async (noteData: Note) => {
+    try {
+      if (editingNote) {
+        // Update existing note
+        await NotesService.updateNote(noteData.id, noteData);
+        setNotes(prevNotes => prevNotes.map(n => n.id === noteData.id ? noteData : n));
+        Toast.show({
+          type: "success",
+          text2: `"${noteData.title}" was updated`,
+        });
+      } else {
+        // Create new note
+        const newNote = await NotesService.createNote(noteData);
+        setNotes(prevNotes => [...prevNotes, newNote]);
+        Toast.show({
+          type: "success",
+          text2: `"${noteData.title}" was saved at your location`,
+        });
+      }
+    } catch (error) {
+      console.error('Error saving note:', error);
       Toast.show({
-        type: "success",
-        text2: `"${noteData.title}" was updated`,
-      });
-    } else {
-      // Add new note
-      updatedNotes = [...notes, noteData];
-      setNotes(updatedNotes);
-      Toast.show({
-        type: "success",
-        text2: `"${noteData.title}" was saved at your location`,
+        type: "error",
+        text2: "Failed to save note",
       });
     }
-    
-    // Save to AsyncStorage
-    saveNotes(updatedNotes);
   };
 
-  const handleNoteDelete = (noteId: string) => {
-    const deletedNote = notes.find(n => n.id === noteId);
-    const updatedNotes = notes.filter(n => n.id !== noteId);
-    setNotes(updatedNotes);
-    
-    Toast.show({
-      type: "error",
-      text2: `"${deletedNote?.title}" was removed`,
-    });
-    
-    // Save to AsyncStorage
-    saveNotes(updatedNotes);
+  const handleNoteDelete = async (noteId: string) => {
+    try {
+      const deletedNote = await NotesService.deleteNote(noteId);
+      if (deletedNote) {
+        setNotes(prevNotes => prevNotes.filter(n => n.id !== noteId));
+        Toast.show({
+          type: "error",
+          text2: `"${deletedNote.title}" was removed`,
+        });
+      }
+    } catch (error) {
+      console.error('Error deleting note:', error);
+      Toast.show({
+        type: "error",
+        text2: "Failed to delete note",
+      });
+    }
   };
 
   const handleNoteEditorClose = () => {
