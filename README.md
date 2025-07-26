@@ -48,7 +48,7 @@ A location-based note-taking app built with React Native and Expo. Create, view,
    ```
 
  **OPTIONAL: Configure Firebase**
-   - The project currnetly uses a dummy 
+   The project currently uses my own dummy Firebase project. If you are interesting in replacing it with your own Firebase project:
    - Update `config/firebase.ts` with your Firebase project credentials 
    - Enable Authentication in Firebase Console
 
